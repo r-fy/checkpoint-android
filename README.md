@@ -1,9 +1,9 @@
 # Checkpoint (Android)
 
-An Android companion to the [Checkpoint](https://github.com) macOS menu-bar app — a
-periodic "what have you been doing?" check-in logger. This is an independent
-build: no server, no accounts, no live sync between devices. Each device writes
-its own local log; getting both files in one place (Syncthing, AirDrop, email,
+An Android companion to Can's Checkpoint program for macOS — a periodic "what
+have you been doing?" check-in logger. This is an independent build: no
+server, no accounts, no live sync between devices. Each device writes its own
+local log; getting both files in one place (Syncthing, AirDrop, email,
 whatever) is up to you.
 
 ## What it does
