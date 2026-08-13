@@ -32,14 +32,26 @@ gauge whether your phone use was productive — not to nag you constantly.
 
 ## Installing
 
-Not on the Play Store or F-Droid — install and auto-update it via
-[Obtainium](https://github.com/ImranR98/Obtainium):
+Not on the Play Store or F-Droid. Two ways to get it, pick whichever:
+
+### Option A: Download the APK directly (works for anyone, no extra app needed)
+
+1. Go to the [Releases page](https://github.com/r-fy/checkpoint-android/releases) and download
+   `app-release.apk` from the latest release.
+2. Open the downloaded file on your phone. Android will ask you to allow installing from this
+   source the first time — approve that for your browser or file manager, then continue the
+   install.
+3. To update later, come back to the Releases page and repeat with the newest version.
+
+### Option B: Obtainium (auto-updates for you)
+
+If you already use [Obtainium](https://github.com/ImranR98/Obtainium) (or want to start), it'll
+track new releases and prompt you to update automatically instead of you checking back manually:
 
 1. Install Obtainium (get it from [its own releases page](https://github.com/ImranR98/Obtainium/releases) or F-Droid).
 2. Open Obtainium, tap **Add App**.
 3. Paste this repo's URL: `https://github.com/r-fy/checkpoint-android`
-4. Tap **Add**, then install. Obtainium will pick up new releases automatically
-   from here on — no manual APK downloads needed.
+4. Tap **Add**, then install.
 
 ## Bugs / requests
 
