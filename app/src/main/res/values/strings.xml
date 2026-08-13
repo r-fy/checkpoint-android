@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Checkpoint</string>
+    <string name="notification_channel_prompts">Check-in prompts</string>
+    <string name="notification_channel_session">Session active</string>
+</resources>

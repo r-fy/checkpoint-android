@@ -1,0 +1,4 @@
+<resources>
+    <style name="Theme.Checkpoint" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Checkpoint.Dialog" parent="android:Theme.Material.Light.Dialog" />
+</resources>
