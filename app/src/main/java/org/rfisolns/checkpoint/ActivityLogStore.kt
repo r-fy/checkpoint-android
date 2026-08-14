@@ -43,6 +43,38 @@ object ActivityLogStore {
         return entry
     }
 
+    fun updateEntry(context: Context, id: String, activity: String, durationMinutes: Int, timestamp: String): Boolean {
+        val all = readAll(context)
+        val index = all.indexOfFirst { it.id == id }
+        if (index == -1) return false
+        val updated = all.toMutableList()
+        updated[index] = ActivityEntry(id, activity, timestamp, durationMinutes)
+        writeAll(context, updated)
+        return true
+    }
+
+    fun deleteEntry(context: Context, id: String): Boolean {
+        val all = readAll(context)
+        if (all.none { it.id == id }) return false
+        writeAll(context, all.filterNot { it.id == id })
+        return true
+    }
+
+    private fun writeAll(context: Context, entries: List<ActivityEntry>) {
+        val text = entries.joinToString("") { entry ->
+            JSONObject()
+                .put("id", entry.id)
+                .put("activity", entry.activity)
+                .put("timestamp", entry.timestamp)
+                .put("durationMinutes", entry.durationMinutes)
+                .toString() + "\n"
+        }
+        val file = logFile(context)
+        file.writeText(text)
+        val appContext = context.applicationContext
+        Thread { LogBackup.mirror(appContext, file) }.start()
+    }
+
     fun readAll(context: Context): List<ActivityEntry> {
         val file = logFile(context)
         if (!file.exists()) return emptyList()

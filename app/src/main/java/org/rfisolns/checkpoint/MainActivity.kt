@@ -9,6 +9,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -76,6 +77,7 @@ private fun CheckpointScreen(context: ComponentActivity) {
     var intervalMinutes by remember { mutableStateOf(Settings.getIntervalMinutes(context)) }
     var autoStart by remember { mutableStateOf(Settings.isAutoStartOnUnlockEnabled(context)) }
     var entries by remember { mutableStateOf(ActivityLogStore.todayEntries(context)) }
+    var editingEntry by remember { mutableStateOf<ActivityEntry?>(null) }
 
     var updateInfo by remember { mutableStateOf<UpdateInfo?>(null) }
     var updateStatus by remember { mutableStateOf<String?>(null) }
@@ -221,10 +223,34 @@ private fun CheckpointScreen(context: ComponentActivity) {
             Text("Today's log", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 16.dp))
             LazyColumn {
                 items(entries) { entry ->
-                    Text("${entry.durationMinutes}m — ${entry.activity}", modifier = Modifier.padding(vertical = 4.dp))
+                    Text(
+                        "${entry.durationMinutes}m — ${entry.activity}",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { editingEntry = entry }
+                            .padding(vertical = 8.dp),
+                    )
                 }
             }
         }
+    }
+
+    editingEntry?.let { entry ->
+        EditEntryDialog(
+            context = context,
+            entry = entry,
+            onSave = { activity, minutes, timestamp ->
+                ActivityLogStore.updateEntry(context, entry.id, activity, minutes, timestamp)
+                entries = ActivityLogStore.todayEntries(context)
+                editingEntry = null
+            },
+            onDelete = {
+                ActivityLogStore.deleteEntry(context, entry.id)
+                entries = ActivityLogStore.todayEntries(context)
+                editingEntry = null
+            },
+            onCancel = { editingEntry = null },
+        )
     }
 }
 
