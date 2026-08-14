@@ -36,7 +36,10 @@ object ActivityLogStore {
             .put("activity", entry.activity)
             .put("timestamp", entry.timestamp)
             .put("durationMinutes", entry.durationMinutes)
-        logFile(context).appendText(json.toString() + "\n")
+        val file = logFile(context)
+        file.appendText(json.toString() + "\n")
+        val appContext = context.applicationContext
+        Thread { LogBackup.mirror(appContext, file) }.start()
         return entry
     }
 
