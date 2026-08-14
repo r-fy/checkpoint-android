@@ -3,6 +3,7 @@ package org.rfisolns.checkpoint
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -26,14 +27,18 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -72,6 +77,36 @@ private fun CheckpointScreen(context: ComponentActivity) {
     var autoStart by remember { mutableStateOf(Settings.isAutoStartOnUnlockEnabled(context)) }
     var entries by remember { mutableStateOf(ActivityLogStore.todayEntries(context)) }
 
+    var updateInfo by remember { mutableStateOf<UpdateInfo?>(null) }
+    var updateStatus by remember { mutableStateOf<String?>(null) }
+    var checkingForUpdate by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    fun runUpdate(info: UpdateInfo) {
+        scope.launch {
+            updateStatus = "Downloading v${info.version}…"
+            when (val result = UpdateChecker.downloadAndVerify(context, info)) {
+                is DownloadResult.Success -> {
+                    if (UpdateChecker.canInstall(context)) {
+                        updateStatus = null
+                        UpdateChecker.install(context, result.file)
+                    } else {
+                        updateStatus = "Enable \"Allow from this source\", then tap Update again."
+                        UpdateChecker.requestInstallPermission(context)
+                    }
+                }
+                DownloadResult.ChecksumMismatch -> updateStatus = "Download didn't match the published checksum. Try again."
+                is DownloadResult.Error -> updateStatus = "Update failed: ${result.message}"
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        checkingForUpdate = true
+        updateInfo = UpdateChecker.checkForUpdate(context)
+        checkingForUpdate = false
+    }
+
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -90,6 +125,21 @@ private fun CheckpointScreen(context: ComponentActivity) {
                 if (sessionActive) "Session active" else "Session idle",
                 style = MaterialTheme.typography.bodyLarge,
             )
+
+            updateInfo?.let { info ->
+                Text(
+                    "Update available: v${info.version}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(top = 16.dp),
+                )
+                Button(
+                    onClick = { runUpdate(info) },
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                ) { Text("Update now") }
+            }
+            updateStatus?.let { status ->
+                Text(status, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
+            }
 
             Button(
                 onClick = {
@@ -144,6 +194,29 @@ private fun CheckpointScreen(context: ComponentActivity) {
                 onClick = { CsvExporter.exportAndShare(context) },
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
             ) { Text("Export CSV") }
+
+            Button(
+                onClick = {
+                    scope.launch {
+                        checkingForUpdate = true
+                        val found = UpdateChecker.checkForUpdate(context)
+                        updateInfo = found
+                        updateStatus = if (found == null) "You're up to date." else null
+                        checkingForUpdate = false
+                    }
+                },
+                enabled = !checkingForUpdate,
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            ) { Text(if (checkingForUpdate) "Checking…" else "Check for updates") }
+
+            Button(
+                onClick = {
+                    context.startActivity(
+                        Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/${UpdateChecker.REPO}/releases")),
+                    )
+                },
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            ) { Text("View on GitHub") }
 
             Text("Today's log", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 16.dp))
             LazyColumn {

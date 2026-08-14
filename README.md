@@ -32,7 +32,8 @@ gauge whether your phone use was productive — not to nag you constantly.
 
 ## Installing
 
-Not on the Play Store or F-Droid. Two ways to get it, pick whichever:
+Not on the Play Store or F-Droid. Three ways to get it — first install has to be
+manual (A or B), after that the app updates itself.
 
 ### Option A: Download the APK directly (works for anyone, no extra app needed)
 
@@ -41,7 +42,6 @@ Not on the Play Store or F-Droid. Two ways to get it, pick whichever:
 2. Open the downloaded file on your phone. Android will ask you to allow installing from this
    source the first time — approve that for your browser or file manager, then continue the
    install.
-3. To update later, come back to the Releases page and repeat with the newest version.
 
 ### Option B: Obtainium (auto-updates for you)
 
@@ -52,6 +52,17 @@ track new releases and prompt you to update automatically instead of you checkin
 2. Open Obtainium, tap **Add App**.
 3. Paste this repo's URL: `https://github.com/r-fy/checkpoint-android`
 4. Tap **Add**, then install.
+
+### After that: in-app updates
+
+Once Checkpoint is installed (via A or B), it checks GitHub for a newer release every time you
+open it, and shows an **Update now** button if one's available (there's also a manual **Check
+for updates** button). Tapping it downloads the new APK, verifies its checksum against the one
+published in the release, and hands it to Android's installer. The first time you do this,
+Android will ask you to allow Checkpoint to install apps — approve that, then tap **Update now**
+again. Android's installer also refuses to install anything not signed with the same key as
+what's already on your phone, which blocks a tampered APK even if it somehow got past the
+checksum.
 
 ## Bugs / requests
 
@@ -68,6 +79,20 @@ Requires JDK 17 and the Android SDK (compileSdk/targetSdk 36, minSdk 29).
 ./gradlew assembleDebug    # debug build
 ./gradlew assembleRelease  # release build (needs a signing config, see below)
 ```
+
+### Publishing a release
+
+The in-app updater looks for two specifically-named assets on the latest GitHub release, so
+both need to be attached when you publish one:
+
+```bash
+./gradlew assembleRelease
+shasum -a 256 app/build/outputs/apk/release/app-release.apk > app-release.apk.sha256
+```
+
+Then create a GitHub release tagged `vX.Y.Z` (matching `versionName` in `app/build.gradle.kts`)
+and attach both `app-release.apk` and `app-release.apk.sha256` to it. Bump `versionCode` and
+`versionName` before building, or the updater won't see it as newer.
 
 ## License
 
