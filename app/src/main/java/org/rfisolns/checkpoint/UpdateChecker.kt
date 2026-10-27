@@ -20,32 +20,32 @@ sealed class DownloadResult {
     data class Error(val message: String) : DownloadResult()
 }
 
-// ponytail: plain HttpURLConnection, no networking library — one GitHub API
+// ponytail: plain HttpURLConnection, no networking library — one GitLab API
 // call and two file downloads don't justify Retrofit/OkHttp.
 object UpdateChecker {
 
-    const val REPO = "r-fy/checkpoint-android"
+    const val REPO = "the_rfy/checkpoint-android"
     private const val APK_ASSET_NAME = "app-release.apk"
     private const val CHECKSUM_ASSET_NAME = "app-release.apk.sha256"
 
     suspend fun checkForUpdate(context: Context): UpdateInfo? = withContext(Dispatchers.IO) {
         runCatching {
-            val conn = URL("https://api.github.com/repos/$REPO/releases/latest").openConnection() as HttpURLConnection
-            conn.setRequestProperty("Accept", "application/vnd.github+json")
+            val conn = URL("https://gitlab.com/api/v4/projects/${REPO.replace("/", "%2F")}/releases/permalink/latest").openConnection() as HttpURLConnection
+            conn.setRequestProperty("Accept", "application/json")
             conn.setRequestProperty("User-Agent", "checkpoint-android")
             val body = conn.inputStream.bufferedReader().use { it.readText() }
             conn.disconnect()
 
             val json = JSONObject(body)
             val tag = json.getString("tag_name").removePrefix("v")
-            val assets = json.getJSONArray("assets")
+            val assets = json.getJSONObject("assets").getJSONArray("links")
             var apkUrl: String? = null
             var shaUrl: String? = null
             for (i in 0 until assets.length()) {
                 val asset = assets.getJSONObject(i)
                 when (asset.getString("name")) {
-                    APK_ASSET_NAME -> apkUrl = asset.getString("browser_download_url")
-                    CHECKSUM_ASSET_NAME -> shaUrl = asset.getString("browser_download_url")
+                    APK_ASSET_NAME -> apkUrl = asset.getString("url")
+                    CHECKSUM_ASSET_NAME -> shaUrl = asset.getString("url")
                 }
             }
             if (apkUrl == null || shaUrl == null) return@withContext null

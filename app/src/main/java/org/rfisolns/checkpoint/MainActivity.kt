@@ -214,11 +214,11 @@ private fun CheckpointScreen(context: ComponentActivity) {
             Button(
                 onClick = {
                     context.startActivity(
-                        Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/${UpdateChecker.REPO}/releases")),
+                        Intent(Intent.ACTION_VIEW, Uri.parse("https://gitlab.com/${UpdateChecker.REPO}/-/releases")),
                     )
                 },
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-            ) { Text("View on GitHub") }
+            ) { Text("View on GitLab") }
 
             Text("Today's log", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 16.dp))
             LazyColumn {
